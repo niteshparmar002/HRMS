@@ -213,25 +213,55 @@ HRMS/
 
 ## Deployment
 
-### Backend (e.g., Railway / Render / DigitalOcean)
+### Backend + Database → Railway (Free)
 
-1. Set `DEBUG=False` and update `ALLOWED_HOSTS` in `.env`
-2. Set `CORS_ALLOWED_ORIGINS` to your frontend URL
-3. Run `python manage.py collectstatic` for static files
-4. Use **gunicorn** as the production server:
-   ```bash
-   pip install gunicorn
-   gunicorn hrms_backend.wsgi:application --bind 0.0.0.0:8000
+1. Go to [railway.app](https://railway.app) → **New Project**
+2. Click **Deploy from GitHub repo** → select this repo → set root directory to `backend`
+3. Add a **MySQL** plugin inside the project (Railway provisions it automatically)
+4. Set these **environment variables** in Railway dashboard:
+
+```
+SECRET_KEY=<generate a new one>
+DEBUG=False
+ALLOWED_HOSTS=<your-railway-app>.up.railway.app
+DB_NAME=${{MySQL.MYSQL_DATABASE}}
+DB_USER=${{MySQL.MYSQL_USER}}
+DB_PASSWORD=${{MySQL.MYSQL_PASSWORD}}
+DB_HOST=${{MySQL.MYSQL_HOST}}
+DB_PORT=${{MySQL.MYSQL_PORT}}
+CORS_ALLOWED_ORIGINS=https://<your-vercel-app>.vercel.app
+```
+
+5. Railway auto-detects the `Procfile` and runs:
+   ```
+   gunicorn hrms_backend.wsgi:application
+   ```
+6. Add a **Deploy Command** in Railway settings:
+   ```
+   python manage.py migrate
    ```
 
-### Frontend (e.g., Vercel / Netlify)
+---
 
-1. Set `VITE_API_URL` to your deployed backend URL
-2. Build the production bundle:
-   ```bash
-   npm run build
+### Frontend → Vercel (Free)
+
+1. Go to [vercel.com](https://vercel.com) → **New Project** → Import GitHub repo
+2. Set **Root Directory** to `frontend`
+3. Add environment variable:
    ```
-3. Deploy the `dist/` folder
+   VITE_API_URL=https://<your-railway-app>.up.railway.app/api
+   ```
+4. Click **Deploy** — Vercel auto-detects Vite and runs `npm run build`
+5. `vercel.json` handles React Router redirects automatically
+
+---
+
+### After Deployment
+
+Update your `.env` locally:
+```
+CORS_ALLOWED_ORIGINS=https://<your-vercel-app>.vercel.app
+```
 
 ---
 
