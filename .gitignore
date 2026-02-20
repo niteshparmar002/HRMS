@@ -1,6 +1,6 @@
 # Python / Django
 __pycache__/
-migrations/
+# migrations/ ← do NOT ignore, Railway needs these to run migrate
 *.py[cod]
 *.pyo
 *.pyd
