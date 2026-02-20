@@ -8,6 +8,7 @@ import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Badge from '../components/Badge'
 import Pagination from '../components/Pagination'
+import { showToast } from '../components/Toast'
 
 const INITIAL_FORM = { employee: '', date: '', status: 'Present' }
 const PAGE_SIZE = 10
@@ -46,7 +47,8 @@ export default function Attendance() {
     } catch (_) {}
   }, [])
 
-  const fetchRecords = useCallback(async (targetPage = page) => {
+  // page is NOT in deps — passed explicitly to avoid double-fetch
+  const fetchRecords = useCallback(async (targetPage = 1) => {
     setLoading(true)
     setError(null)
     try {
@@ -66,7 +68,7 @@ export default function Attendance() {
     } finally {
       setLoading(false)
     }
-  }, [filterEmployee, filterDate, filterStatus, page])
+  }, [filterEmployee, filterDate, filterStatus])
 
   const fetchSummary = useCallback(async () => {
     if (!filterEmployee) { setSummary(null); return }
@@ -77,11 +79,12 @@ export default function Attendance() {
   }, [filterEmployee])
 
   useEffect(() => { fetchEmployees() }, [fetchEmployees])
-  useEffect(() => { fetchRecords() }, [fetchRecords])
+  // Re-fetch page 1 whenever filters change
+  useEffect(() => {
+    setPage(1)
+    fetchRecords(1)
+  }, [fetchRecords])
   useEffect(() => { fetchSummary() }, [fetchSummary])
-
-  // Reset to page 1 when filters change
-  useEffect(() => { setPage(1) }, [filterEmployee, filterDate, filterStatus])
 
   const handlePageChange = (newPage) => {
     setPage(newPage)
@@ -103,11 +106,12 @@ export default function Attendance() {
     setSubmitting(true)
     setFormApiError(null)
     try {
-      await attendanceApi.create(formData)
+      const res = await attendanceApi.create(formData)
+      showToast(`Attendance marked as ${res.data.data.status} for ${res.data.data.employee_name}.`)
       setShowModal(false)
       setFormData(INITIAL_FORM)
       setFormErrors({})
-      fetchRecords()
+      fetchRecords(1)
       fetchSummary()
     } catch (err) {
       const errors = err.response?.data?.errors
@@ -135,11 +139,12 @@ export default function Attendance() {
     setDeleting(true)
     try {
       await attendanceApi.delete(deleteTarget.id)
+      showToast('Attendance record deleted.', 'info')
       setDeleteTarget(null)
-      fetchRecords()
+      fetchRecords(1)
       fetchSummary()
     } catch (err) {
-      alert(err.friendlyMessage || 'Failed to delete record.')
+      showToast(err.friendlyMessage || 'Failed to delete record.', 'error')
     } finally {
       setDeleting(false)
     }
@@ -269,7 +274,7 @@ export default function Attendance() {
                 <tbody className="divide-y divide-gray-100">
                   {records.map((rec, idx) => (
                     <tr key={rec.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="table-td text-gray-400 text-xs">{idx + 1}</td>
+                      <td className="table-td text-gray-400 text-xs">{(pagination.current_page - 1) * PAGE_SIZE + idx + 1}</td>
                       <td className="table-td font-mono text-xs text-gray-500">{rec.employee_id_code}</td>
                       <td className="table-td font-semibold text-gray-900">{rec.employee_name}</td>
                       <td className="table-td">

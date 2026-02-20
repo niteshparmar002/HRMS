@@ -7,6 +7,7 @@ import ErrorMessage from '../components/ErrorMessage'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Pagination from '../components/Pagination'
+import { showToast } from '../components/Toast'
 
 const DEPARTMENTS = [
   'Engineering', 'Product', 'Design', 'Marketing', 'Sales',
@@ -34,7 +35,8 @@ export default function Employees() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
-  const fetchEmployees = useCallback(async (targetPage = page) => {
+  // page is NOT in deps — passed explicitly to avoid double-fetch
+  const fetchEmployees = useCallback(async (targetPage = 1) => {
     setLoading(true)
     setError(null)
     try {
@@ -53,14 +55,13 @@ export default function Employees() {
     } finally {
       setLoading(false)
     }
-  }, [search, deptFilter, page])
+  }, [search, deptFilter])
 
-  useEffect(() => { fetchEmployees() }, [fetchEmployees])
-
-  // Reset to page 1 on filter/search change
+  // Re-fetch page 1 whenever search or department filter changes
   useEffect(() => {
     setPage(1)
-  }, [search, deptFilter])
+    fetchEmployees(1)
+  }, [fetchEmployees])
 
   const handlePageChange = (newPage) => {
     setPage(newPage)
@@ -87,11 +88,12 @@ export default function Employees() {
     setSubmitting(true)
     setFormApiError(null)
     try {
-      await employeeApi.create(formData)
+      const res = await employeeApi.create(formData)
+      showToast(`Employee "${res.data.data.full_name}" added successfully.`)
       setShowAddModal(false)
       setFormData(INITIAL_FORM)
       setFormErrors({})
-      fetchEmployees()
+      fetchEmployees(1)
     } catch (err) {
       const errors = err.response?.data?.errors
       if (errors && typeof errors === 'object') {
@@ -112,11 +114,13 @@ export default function Employees() {
     if (!deleteTarget) return
     setDeleting(true)
     try {
+      const name = deleteTarget.full_name
       await employeeApi.delete(deleteTarget.id)
+      showToast(`Employee "${name}" deleted.`, 'info')
       setDeleteTarget(null)
-      fetchEmployees()
+      fetchEmployees(1)
     } catch (err) {
-      alert(err.friendlyMessage || 'Failed to delete employee.')
+      showToast(err.friendlyMessage || 'Failed to delete employee.', 'error')
     } finally {
       setDeleting(false)
     }
