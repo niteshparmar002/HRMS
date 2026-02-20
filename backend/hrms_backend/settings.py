@@ -59,37 +59,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hrms_backend.wsgi.application'
 
-# Railway provides MYSQL_URL automatically from the MySQL plugin.
-# Fall back to individual DB_* variables for local development.
-_MYSQL_URL = os.environ.get('MYSQL_URL') or os.environ.get('DATABASE_URL')
-
-if _MYSQL_URL:
-    # Parse mysql://user:password@host:port/dbname
-    from urllib.parse import urlparse
-    _u = urlparse(_MYSQL_URL)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': _u.path.lstrip('/'),
-            'USER': _u.username,
-            'PASSWORD': _u.password,
-            'HOST': _u.hostname,
-            'PORT': str(_u.port or 3306),
-            'OPTIONS': {'charset': 'utf8mb4'},
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('DB_NAME', default='hrms_db'),
+        'USER': config('DB_USER', default='root'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='3306'),
+        'OPTIONS': {'charset': 'utf8mb4'},
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': config('DB_NAME', default='hrms_db'),
-            'USER': config('DB_USER', default='root'),
-            'PASSWORD': config('DB_PASSWORD', default=''),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', default='3306'),
-            'OPTIONS': {'charset': 'utf8mb4'},
-        }
-    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
