@@ -160,9 +160,9 @@ export default function Attendance() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Attendance</h1>
           <p className="text-sm text-gray-500 mt-1">
             {pagination.total} record{pagination.total !== 1 ? 's' : ''} total
             {filterEmployee && summary ? ` · ${summary.present_days} present, ${summary.absent_days} absent` : ''}
@@ -191,14 +191,14 @@ export default function Attendance() {
       )}
 
       {/* Filters */}
-      <div className="card p-4 flex flex-col sm:flex-row gap-3">
-        <div className="flex items-center gap-2 text-gray-400 flex-shrink-0">
+      <div className="card p-4 flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 text-gray-400 flex-shrink-0 self-center">
           <Filter className="w-4 h-4" />
         </div>
         <select
           value={filterEmployee}
           onChange={(e) => setFilterEmployee(e.target.value)}
-          className="input-field sm:flex-1"
+          className="input-field flex-1 min-w-[160px]"
         >
           <option value="">All Employees</option>
           {employees.map((e) => (
@@ -212,12 +212,12 @@ export default function Attendance() {
           value={filterDate}
           max={todayStr}
           onChange={(e) => setFilterDate(e.target.value)}
-          className="input-field sm:w-44"
+          className="input-field w-full sm:w-44"
         />
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="input-field sm:w-36"
+          className="input-field w-full sm:w-36"
         >
           <option value="">All Status</option>
           <option value="Present">Present</option>
@@ -340,7 +340,7 @@ export default function Attendance() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Date <span className="text-red-500">*</span>
